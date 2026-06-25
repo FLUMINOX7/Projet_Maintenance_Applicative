@@ -6,14 +6,15 @@ from typing import Mapping
 import requests
 
 
-BASE_RATES = {
+FALLBACK_RATES = {
     "EUR": 1.0,
     "USD": 1.1,
     "JPY": 130.0,
     "GBP": 0.86,
     "CAD": 1.47,
 }
-SUPPORTED_CURRENCIES = tuple(BASE_RATES.keys())
+SUPPORTED_CURRENCIES = tuple(FALLBACK_RATES.keys())
+API_KEY = "6563bd1f49f6d2bbf06c92d7"
 API_URL_TEMPLATE = "https://v6.exchangerate-api.com/v6/{api_key}/latest/{base_currency}"
 API_KEY_ENV_VAR = "EXCHANGERATE_API_KEY"
 
@@ -29,7 +30,10 @@ def validate_conversion(amount: float, from_currency: str, to_currency: str) -> 
         raise ValueError("Une devise sélectionnée n'est pas prise en charge.")
 
 
-def _build_rate_table(base_currency: str, reference_rates: Mapping[str, float] = BASE_RATES) -> dict[str, float]:
+def _build_rate_table(
+    base_currency: str,
+    reference_rates: Mapping[str, float] = FALLBACK_RATES,
+) -> dict[str, float]:
     base_rate = reference_rates[base_currency]
     return {
         currency: rate / base_rate
@@ -47,7 +51,7 @@ def fetch_rates(
     if resolved_api_key:
         try:
             response = requests.get(
-                API_URL_TEMPLATE.format(api_key=resolved_api_key, base_currency=base_currency),
+                API_URL_TEMPLATE.format(api_key=API_KEY, base_currency=base_currency),
                 timeout=timeout,
             )
             response.raise_for_status()

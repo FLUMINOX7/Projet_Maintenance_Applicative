@@ -1,20 +1,26 @@
 from __future__ import annotations
 
+import os
 from datetime import datetime
 
 import streamlit as st
 
-from app_functions import SUPPORTED_CURRENCIES, convert_currency
+from app_functions import API_KEY_ENV_VAR, SUPPORTED_CURRENCIES, convert_currency
 
 
-st.set_page_config(page_title="Convertisseur de devises", page_icon="💱", layout="centered")
+st.set_page_config(page_title="Convertisseur de devises", layout="centered")
 
 st.title("Convertisseur de devises")
-st.caption("Maintenance corrective, évolutive, adaptative et perfective réunies dans une seule version.")
 
 
 if "history" not in st.session_state:
     st.session_state.history = []
+
+if "feedback_message" not in st.session_state:
+    st.session_state.feedback_message = ""
+
+if "feedback_kind" not in st.session_state:
+    st.session_state.feedback_kind = "info"
 
 if "from_currency" not in st.session_state:
     st.session_state.from_currency = SUPPORTED_CURRENCIES[0]
@@ -23,7 +29,28 @@ if "to_currency" not in st.session_state:
     st.session_state.to_currency = SUPPORTED_CURRENCIES[1]
 
 
+def swap_currencies() -> None:
+    st.session_state.from_currency, st.session_state.to_currency = (
+        st.session_state.to_currency,
+        st.session_state.from_currency,
+    )
+    st.session_state.feedback_kind = "info"
+    st.session_state.feedback_message = "Les devises ont été inversées."
+
+
 amount_col, currency_col = st.columns([1, 1])
+
+if st.session_state.feedback_message:
+    feedback = st.session_state.feedback_message
+    feedback_kind = st.session_state.feedback_kind
+    st.session_state.feedback_message = ""
+    st.session_state.feedback_kind = "info"
+    if feedback_kind == "error":
+        st.error(feedback)
+    elif feedback_kind == "success":
+        st.success(feedback)
+    else:
+        st.info(feedback)
 
 with amount_col:
     amount = st.number_input("Montant :", min_value=0.0, format="%.2f", step=0.01)
@@ -36,18 +63,10 @@ with currency_col:
 button_col_1, button_col_2 = st.columns(2)
 
 with button_col_1:
-    swap_pressed = st.button("⇄ Inverser", use_container_width=True)
+    st.button("⇄ Inverser", use_container_width=True, on_click=swap_currencies)
 
 with button_col_2:
     convert_pressed = st.button("Convertir", use_container_width=True)
-
-
-if swap_pressed:
-    st.session_state.from_currency, st.session_state.to_currency = (
-        st.session_state.to_currency,
-        st.session_state.from_currency,
-    )
-    st.rerun()
 
 
 if convert_pressed:
