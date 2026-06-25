@@ -1,0 +1,12 @@
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203", "W503"]
+
+[tool.ruff]
+# not required, but keeping configuration minimal if present later
+line-length = 88
+
